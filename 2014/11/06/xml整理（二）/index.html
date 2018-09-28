@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      xml整理（二） | 小童博客
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/plugins/gitment.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+  <script src="/js/qrious.js"></script>
+<script src="/js/gitment.js"></script>
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>小童博客</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>xml整理（二）</h2>
+  <p class="post-date">2014-11-06</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><p><em>时隔两日，再次来整理XML的内容，似乎间隔有些长。终究还是不够勤快，压抑不住自己爱玩的心。今天在知乎上看到大师兄又写了一篇<a href="http://www.zhihu.com/question/26092705/answer/32989919" target="_blank" rel="noopener">答案</a>。倒不是对所提的问题有何想法，只是大师兄的某些话说到了心坎里：</em><a id="more"></a></p>
+<blockquote>
+<p>“你只要不想等，不愿信，你站起来，关灯，收拾干净，拍屁股走人，出来你就是铁人，没有人伤得了你，但这应该不是你想要的。</p>
+</blockquote>
+<blockquote>
+<p>这世上容易的，就是看破红尘，难的，恰是命里打滚，轻而易举，说一些不痛不痒，都是没想明白。”</p>
+</blockquote>
+<p><em>是吧，感情也罢，梦想也罢，默默地等待，默默地付出，只觉得该为某些事情热血地追求。若自己某日，打着看破的幌子，放弃坚持的初衷。那我，还是想要为尘世的纷扰而不得解吧。等吧，等到想要的结果，等到该来的人。</em></p>
+<blockquote>
+<p>“在散场的最后一秒到来之前，空荡荡的剧场里走进来一个人。</p>
+</blockquote>
+<blockquote>
+<p>你就一定要说：</p>
+</blockquote>
+<blockquote>
+<p>等你很久啦。”</p>
+</blockquote>
+<p><em>扯远了，只是想来接着整理我的XML的。今天打算整理DTD, XML schema,这几项属于Schema的内容。</em></p>
+<hr>
+<h3 id="何谓schema"><a href="#何谓schema" class="headerlink" title="何谓schema"></a>何谓schema</h3><p>schema实际上一种描述语言，一般用于描述DBs或者XML，在此特指对XML的描述。通过Schema，可以描述XML的</p>
+<ul>
+<li>标签（tag）和属性（attribute）的名字</li>
+<li>文件的结构：（元素（element）如何嵌套、哪个元素拥有哪个属性）</li>
+<li>数据：类型（字符串？数字？）</li>
+</ul>
+<p>为何需要schema</p>
+<ul>
+<li>XML文档可以有更多可依赖的格式：结构，标签，数据类型。但同时想保持扩展性与灵活性。</li>
+<li>可以描述怎样的数据是合法的、期待的、事先设定。</li>
+</ul>
+<p>对于使用schema有两种使用方式：</p>
+<ul>
+<li>描述型（descriptive）:为他人描述XML文档，如此，便可知道如何更好地组织数据。</li>
+<li>规范型（prescriptive）:防止程序调用了错误的XML文档。</li>
+</ul>
+<hr>
+<h3 id="什么是DTD"><a href="#什么是DTD" class="headerlink" title="什么是DTD"></a>什么是DTD</h3><p>DTD是在XML1.0时代的标准。DTD并不是一个典型的XML类型的文档，故而具有以下特点：</p>
+<ul>
+<li>不能被解析为一个DOM (Document Object Model)</li>
+<li>无法扩展（即不能在一个DTD文档中import另一个DTD文档）</li>
+<li>易读易写。</li>
+</ul>
+<h3 id="DTD如何描述XML"><a href="#DTD如何描述XML" class="headerlink" title="DTD如何描述XML"></a>DTD如何描述XML</h3><p>描述一个逻辑结构的例子：</p>
+<ul>
+<li>elements</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ELEMENT name(#PCDATA)&gt;</span><br><span class="line">&lt;!ELEMENT person(name, address+, email*)&gt;</span><br><span class="line">&lt;!ELEMENT address(city,(nr,street)?)&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>attributes</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ATTLIST name type(family|personal|place) &quot;personal&quot;&gt;</span><br></pre></td></tr></table></figure>
+<p>此例子意为：元素name可以使用type属性，type可选值为family,personal,place，其中personal为默认值。<br>据此规范，正确的xml文档：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">name</span>&gt;</span>Bijan<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">name</span> <span class="attr">type</span>=<span class="string">"personal"</span>&gt;</span>Bijan<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">name</span> <span class="attr">type</span>=<span class="string">"family"</span>&gt;</span>Parsia<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>不正确的：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">name</span> <span class="attr">type</span>=<span class="string">"DontKnow"</span>&gt;</span>Bijan<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>由此，我们可以总结，DTD描述的模板如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">!ELEMENT</span> <span class="attr">element-name</span> (<span class="attr">element-content</span>)&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">!ATTLIST</span> <span class="attr">element-name</span> <span class="attr">attribute-name</span> <span class="attr">attribute-type</span> <span class="attr">attribute-value</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>其中element-content支持使用元素名的正则表达式。</p>
+<p>另外DTD还能描述实体引用（类似宏定义）。例子如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ENTITY writer &quot;Donald Duck&quot;&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="如何使用DTD"><a href="#如何使用DTD" class="headerlink" title="如何使用DTD"></a>如何使用DTD</h3><p>DTD在XML文档中有两种引入方式，一种为内嵌型（internal），另一种外置型（external）。</p>
+<p>内嵌型的使用方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE cartoon[</span><br><span class="line">&lt;!ELEMENT cartoon (prolog,panels)&gt;</span><br><span class="line">...</span><br><span class="line">&lt;!ELEMENT speech(#PCDATA)&gt;]&gt;</span><br><span class="line">&lt;cartoon copyright=&quot;United Feature Syndicate&quot;&gt;</span><br><span class="line">    &lt;prolog&gt;</span><br><span class="line">        ...</span><br><span class="line">    &lt;/prolog&gt;</span><br><span class="line">&lt;/cartoon&gt;</span><br></pre></td></tr></table></figure>
+<p>外置型使用方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE cartoon SYSTEM &quot;cartoon.dtd&quot;&gt;</span><br><span class="line">&lt;cartoon copyright=&quot;United Feature Syndicate&quot;&gt;</span><br><span class="line">    &lt;prolog&gt;</span><br><span class="line">        ...</span><br><span class="line">    &lt;/prolog&gt;</span><br><span class="line">&lt;/cartoon&gt;</span><br></pre></td></tr></table></figure>
+<p>当然也可以两者同时使用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE cartoon SYSTEM &quot;cartoon.dtd&quot;</span><br><span class="line">[&lt;!ATTLIST cartoon oneMore CDATA #IMPLIED&gt;]&gt;</span><br><span class="line">&lt;cartoon copyright=&quot;United Feature Syndicate&quot; oneMore=&quot;3&quot;&gt;</span><br><span class="line">	&lt;prolog&gt;</span><br><span class="line">		...</span><br><span class="line">	&lt;/prolog&gt;</span><br><span class="line">&lt;/cartoon&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="valid-不知如何翻译"><a href="#valid-不知如何翻译" class="headerlink" title="valid(不知如何翻译)"></a>valid(不知如何翻译)</h3><p>如果XML文件完全满足某一DTD文档，则认为该XML文档 valid w.r.t a DTD。</p>
+<p>如果XML同时满足以下条件，则认为XML文档valid：</p>
+<ul>
+<li>该文档是well-formed</li>
+<li>该文档引入了一个DTD文档</li>
+<li>该文档valid w.r.t <strong>引入的</strong>文档</li>
+<li>声明元素为该文档的根元素：<code>&lt;!DOCTYPE cartoon SYSTEM &quot;cartoon.dtd&quot;&gt;</code>其中的cartoon。</li>
+</ul>
+<hr>
+<h3 id="什么是XML-Schema"><a href="#什么是XML-Schema" class="headerlink" title="什么是XML Schema"></a>什么是XML Schema</h3><p>XML Schema（也被称为XML Schema Definition、XSD）是DTD的替代品，并且一致认为其比DTD更加成功。相对DTD，XSD有这些特点：</p>
+<ul>
+<li>DTD<strong>不是</strong>well-formed XML文档，而XSD<strong>是</strong></li>
+<li>XSD有更强的表达能力</li>
+<li>XSD支持namespaces, datatypes(date, 06/11/2014)</li>
+<li>XML能描述元素的复杂content。</li>
+</ul>
+<h3 id="XSD例子："><a href="#XSD例子：" class="headerlink" title="XSD例子："></a>XSD例子：</h3><p>DTD</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!ELEMENT note (to, from, sentOn, heading, body)&gt;</span><br><span class="line">&lt;!ELEMENT to (#PCDATA)&gt;</span><br><span class="line">&lt;!ELEMENT from (#PCDATA)&gt;</span><br><span class="line">&lt;!ELEMENT sentOn (#PCDATA)&gt;</span><br><span class="line">&lt;!ELEMENT body (#PCDATA)&gt;</span><br></pre></td></tr></table></figure>
+<p>相应XSD</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">xs:schema</span> <span class="attr">xmlns:xs</span>=<span class="string">"http://www.w3.org/2001/XMLSchema"</span> <span class="attr">targetNmaespace</span> = <span class="string">"http://www.w3schools.com"</span> <span class="attr">xmlns</span>=<span class="string">"http://www.w3schools.com"</span> <span class="attr">elementFormDefault</span>=<span class="string">"qualified"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span> = <span class="string">"note"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">xs:complexType</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">xs:sequence</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span>=<span class="string">"to"</span> <span class="attr">type</span>=<span class="string">"xs:string"</span> /&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span>=<span class="string">"from"</span> <span class="attr">type</span>=<span class="string">"xs:string"</span> /&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span>=<span class="string">"sentOn"</span> <span class="attr">type</span>=<span class="string">"xs:date"</span> /&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span>=<span class="string">"body"</span> <span class="attr">type</span>=<span class="string">"xs:string"</span> /&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">xs:sequence</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">xs:complexType</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">xs:element</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xs:schema</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>###type, content, restriction and extension<br>XSD中的type可分为simpleType and complexType:</p>
+<ul>
+<li>simpleType可以用于属性，不带子元素或者不带属性的元素</li>
+<li>complexType可以用于element content 或者mixed element content 或者 text content和attribuctes</li>
+</ul>
+<p>而content的使用：</p>
+<ul>
+<li>对于有属性声明的元素，我们不能使用simpleType，但是我们可以使用simpleContent来通过继承方式获得simpleType:</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xs:element</span> <span class="attr">name</span> = <span class="string">"size"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">xs:complexType</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">xs:simpleCont</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">xs:extension</span> <span class="attr">base</span> = <span class="string">"xs:integer"</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">xs:attribute</span> <span class="attr">name</span> = <span class="string">"country"</span> <span class="attr">type</span> = <span class="string">"xs:string"</span> /&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">xs:extension</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">xs:simpleCont</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">xs:complexType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xs:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>complexContent则包含了继承或扩展自complexType的content或element。</li>
+</ul>
+<p>而restriction and extension则用于继承或者扩展type。从字面意义便可理解两者的区别。</p>
+<p>更详细的内容可以参看<a href="http://www.w3schools.com/schema/schema_elements_ref.asp" target="_blank" rel="noopener">w3schools.com</a>。</p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#xml" >
+    <span class="tag-code">xml</span>
+  </a>
+
+  <a href="/tags#course" >
+    <span class="tag-code">course</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2014/11/03/xml整理-一/">
+        <span class="nav-arrow">← </span>
+        
+          xml整理(一)
+        
+      </a>
+    
+    
+      <a class="nav-right" href="/2016/02/28/Python3中的AsyncIO库阅读后思考/">
+        
+          Python3中的AsyncIO库阅读后思考
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#何谓schema"><span class="toc-nav-text">何谓schema</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#什么是DTD"><span class="toc-nav-text">什么是DTD</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#DTD如何描述XML"><span class="toc-nav-text">DTD如何描述XML</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#如何使用DTD"><span class="toc-nav-text">如何使用DTD</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#valid-不知如何翻译"><span class="toc-nav-text">valid(不知如何翻译)</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#什么是XML-Schema"><span class="toc-nav-text">什么是XML Schema</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#XSD例子："><span class="toc-nav-text">XSD例子：</span></a></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://tongfeifan.github.io/2014/11/06/xml整理（二）/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+     // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+        
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+
+    // qrcode
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+
+    // gitment
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "xml整理（二）",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  })();
+</script>
+
+<script>
+  var disqus_shortname = '';
+  
+  var disqus_url = 'http://tongfeifan.github.io/2014/11/06/xml整理（二）/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2018 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>

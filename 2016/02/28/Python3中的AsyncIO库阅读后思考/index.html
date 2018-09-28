@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      Python3中的AsyncIO库阅读后思考 | 小童博客
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/plugins/gitment.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+  <script src="/js/qrious.js"></script>
+<script src="/js/gitment.js"></script>
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>小童博客</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>Python3中的AsyncIO库阅读后思考</h2>
+  <p class="post-date">2016-02-28</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h2 id="何谓异步"><a href="#何谓异步" class="headerlink" title="何谓异步"></a>何谓异步</h2><p>要搞清楚AsyncIO的实现原理，首先需要明白一些基本概念，异步（Asynchrony），详细的描述在<a href="https://en.wikipedia.org/wiki/Asynchrony_%28computer_programming%29" target="_blank" rel="noopener">维基百科</a>中有。大致翻译：</p>
+<blockquote>
+<p>异步是一种对于独立于主程序流的事件的处理方法。这些事件一般是外部事件，如信号到达，动作触发，而且异步不会阻塞等待结果。<br>一种处理异步的常规方式便是提供一个方法，该方法返回给调用者一个对象（一般称为<a href="https://en.wikipedia.org/wiki/Futures_and_promises" target="_blank" rel="noopener">future or promise</a>）用来表示一个持续进行的事件。<br>*<a id="more"></a></p>
+</blockquote>
+<p>恩，大致翻译如此，引用来自<a href="http://zhihu.com/question/19732473/answer/20851256?utm_campaign=webshare&amp;utm_source=weibo&amp;utm_medium=zhihu" target="_blank" rel="noopener">知乎</a>@<a href="https://www.zhihu.com/people/tianyishengshui" target="_blank" rel="noopener">卢毅</a>的一个通俗例子便是：</p>
+<blockquote>
+<p>你打电话问书店老板有没有《分布式系统》这本书，如果是同步通信机制，书店老板会说，你稍等，”我查一下”，然后开始查啊查，等查好了（可能是5秒，也可能是一天）告诉你结果（返回结果）。<br>而异步通信机制，书店老板直接告诉你我查一下啊，查好了打电话给你，然后直接挂电话了（不返回结果）。然后查好了，他会主动打电话给你。在这里老板通过“回电”这种方式来回调。</p>
+</blockquote>
+<h2 id="何谓协程-coroutine"><a href="#何谓协程-coroutine" class="headerlink" title="何谓协程(coroutine)"></a>何谓协程(coroutine)</h2><p>在更细的粒度上执行的子程序，协程在同一线程上并行执行，由程序级控制其调度。在python中，通过生成器(generator)来并行执行多个协程。即通过yield关键字实现。</p>
+<p>引用<a href="http://www.jackyshen.com/2015/05/21/async-operations-in-form-of-sync-programming-with-python-yielding/" target="_blank" rel="noopener">该处</a>的解释便是：</p>
+<blockquote>
+<p>任何包含<code>yield</code>关键字的函数都会自动成为生成器(generator)对象,里面的代码一般是一个有限或无限循环结构，每当第一次调用该函数时，会执行到yield代码为止并返回本次迭代结果，yield指令起到的是return关键字的作用。然后函数的堆栈会自动冻结(freeze)在这一行。当函数调用者的下一次利用next()或generator.send()或for-in来再次调用该函数时，就会从yield代码的下一行开始，继续执行，再返回下一次迭代结果。通过这种方式，迭代器可以实现无限序列和惰性求值。</p>
+</blockquote>
+<h2 id="Python-中的AsyncIO"><a href="#Python-中的AsyncIO" class="headerlink" title="Python 中的AsyncIO"></a>Python 中的AsyncIO</h2><p>好了，至此我们可以看一下Python3.4、3.5中的AsyncIO的实现<br>打开<code>asyncio</code>库，进入<code>__init__</code>文件，可以看到AsyncIO使用了python3.4的selectors库用于系统级别的IO切换，同时也兼顾了win32平台，为win32平台另外引入了其他模块</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> sys.platform == <span class="string">'win32'</span>:</span><br><span class="line">    <span class="comment"># Similar thing for _overlapped.</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">from</span> . <span class="keyword">import</span> _overlapped</span><br><span class="line">    <span class="keyword">except</span> ImportError:</span><br><span class="line">        <span class="keyword">import</span> _overlapped  <span class="comment"># Will also be exported.</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> sys.platform == <span class="string">'win32'</span>:  <span class="comment"># pragma: no cover</span></span><br><span class="line">    <span class="keyword">from</span> .windows_events <span class="keyword">import</span> *</span><br><span class="line">    __all__ += windows_events.__all__</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="keyword">from</span> .unix_events <span class="keyword">import</span> *  <span class="comment"># pragma: no cover</span></span><br><span class="line">    __all__ += unix_events.__all__</span><br></pre></td></tr></table></figure>
+<p>除此之外，这个package包括了其他一系列用于执行方便执行协程的模块。在此可以着重分析一下<code>base_events</code>、 <code>coroutines</code>、 <code>futures</code>、 <code>task</code>模块。</p>
+<p>从<code>coroutines</code>模块，我们可以看出关键是<code>coroutine</code>装饰器，该装饰器将generator类型标记为 corcoutine类型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">coroutine</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="string">"""Decorator to mark coroutines.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    If the coroutine is not yielded from before it is destroyed,</span></span><br><span class="line"><span class="string">    an error message is logged.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">   <span class="keyword">if</span> _inspect_iscoroutinefunction(func):</span><br><span class="line">        <span class="comment"># In Python 3.5 that's all we need to do for coroutines</span></span><br><span class="line">        <span class="comment"># defiend with "async def".</span></span><br><span class="line">        <span class="comment"># Wrapping in CoroWrapper will happen via</span></span><br><span class="line">        <span class="comment"># 'sys.set_coroutine_wrapper' function.</span></span><br><span class="line">        <span class="keyword">return</span> func</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> inspect.isgeneratorfunction(func):</span><br><span class="line">        coro = func</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line"><span class="meta">        @functools.wraps(func)</span></span><br><span class="line">        <span class="function"><span class="keyword">def</span> <span class="title">coro</span><span class="params">(*args, **kw)</span>:</span></span><br><span class="line">            res = func(*args, **kw)</span><br><span class="line">            <span class="keyword">if</span> isinstance(res, futures.Future) <span class="keyword">or</span> inspect.isgenerator(res):</span><br><span class="line">                res = <span class="keyword">yield</span> <span class="keyword">from</span> res</span><br><span class="line">            <span class="keyword">elif</span> _AwaitableABC <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                <span class="comment"># If 'func' returns an Awaitable (new in 3.5) we</span></span><br><span class="line">                <span class="comment"># want to run it.</span></span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    await_meth = res.__await__</span><br><span class="line">                <span class="keyword">except</span> AttributeError:</span><br><span class="line">                    <span class="keyword">pass</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">if</span> isinstance(res, _AwaitableABC):</span><br><span class="line">                        res = <span class="keyword">yield</span> <span class="keyword">from</span> await_meth()</span><br><span class="line">            <span class="keyword">return</span> res</span><br></pre></td></tr></table></figure>
+<p>另外该模块中还有一个<code>debug_wrapper</code>， 会在开启debug模式的情况下被调用，我猜测通过这种方法，便可方便在debug模式下断点调试时也可及时看到目前<code>coroutine</code>中的值。</p>
+<p>接下来，<code>futures</code>模块即为一个常规的futures模块，其中实现了future类，而在<code>tasks</code>模块中，则实现了对coroutine对象的wrap，将coroutine封装为future类。如此一来，便将其统一为一个抽象的future类，可被统一调度。<br>最后，结合<code>base_events</code>模块，我们来看一段典型的示例代码，并讨论一些，这段代码背后是怎么跑的。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"></span><br><span class="line"><span class="meta">@asyncio.coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="string">'Hello world! (%s)'</span> % threading.currentThread())</span><br><span class="line">    <span class="keyword">yield</span> <span class="keyword">from</span> asyncio.sleep(<span class="number">1</span>)</span><br><span class="line">    print(<span class="string">'Hello again! (%s)'</span> % threading.currentThread())</span><br><span class="line"></span><br><span class="line">loop = asyncio.get_event_loop()</span><br><span class="line">tasks = [hello(), hello()]</span><br><span class="line">loop.run_until_complete(asyncio.wait(tasks))</span><br><span class="line">loop.close()</span><br></pre></td></tr></table></figure>
+<p>以上为一段经典的，及其简单的协程调用代码。通过<a href="mailto:`@asyncio.coroutine" target="_blank" rel="noopener">`@asyncio.coroutine</a><code>与</code>yield from<code>， hello程序被定义成了一个coroutine，（python3.5开始，推荐</code>asnyc/await<code>关键字）然后返回一个event loop实例。通过</code>asyncio.wait()<code>，tasks（coroutine列表）被包装为Task（继承自Future的wrapper），然而作为参数传递给</code>loop.run_unitl_complite()`方法。在该方法中，Future中的任务被不断地并行来回切换执行(yield from导致的协程特性)，直到全部完成，关闭该event loop。</p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#Python" >
+    <span class="tag-code">Python</span>
+  </a>
+
+  <a href="/tags#并发编程" >
+    <span class="tag-code">并发编程</span>
+  </a>
+
+  <a href="/tags#源码阅读" >
+    <span class="tag-code">源码阅读</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2014/11/06/xml整理（二）/">
+        <span class="nav-arrow">← </span>
+        
+          xml整理（二）
+        
+      </a>
+    
+    
+      <a class="nav-right" href="/2016/03/04/Python中列表、迭代器、生成器的关系/">
+        
+          Python中列表、迭代器、生成器的关系
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#何谓异步"><span class="toc-nav-text">何谓异步</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#何谓协程-coroutine"><span class="toc-nav-text">何谓协程(coroutine)</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Python-中的AsyncIO"><span class="toc-nav-text">Python 中的AsyncIO</span></a></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://tongfeifan.github.io/2016/02/28/Python3中的AsyncIO库阅读后思考/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+     // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+        
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+
+    // qrcode
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+
+    // gitment
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "Python3中的AsyncIO库阅读后思考",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  })();
+</script>
+
+<script>
+  var disqus_shortname = '';
+  
+  var disqus_url = 'http://tongfeifan.github.io/2016/02/28/Python3中的AsyncIO库阅读后思考/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2018 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>

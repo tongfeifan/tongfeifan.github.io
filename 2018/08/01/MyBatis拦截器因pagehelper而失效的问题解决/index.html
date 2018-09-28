@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      MyBatis拦截器因pagehelper而失效的问题解决 | 小童博客
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/plugins/gitment.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+  <script src="/js/qrious.js"></script>
+<script src="/js/gitment.js"></script>
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>小童博客</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>MyBatis拦截器因pagehelper而失效的问题解决</h2>
+  <p class="post-date">2018-08-01</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><p><code>pagehelper</code>是github开源的一款MyBatis分页插件，该插件是通过MyBatis拦截器实现的。然而使用<code>pagehelper</code>有可能会导致其他拦截器失效，今天就遇到了这个问题。</p>
+<h2 id="事件经过"><a href="#事件经过" class="headerlink" title="事件经过"></a>事件经过</h2><h3 id="1-起因"><a href="#1-起因" class="headerlink" title="1.起因"></a>1.起因</h3><p>今天一到公司就有业务系统反映CAT无法记录SQL的埋点，经过mentor的提示，可能是cat客户端中的mybatis拦截器<code>catMybatisPlus</code>失效而没有上报SQL埋点，大概率和分页插件有关。</p>
+<h3 id="2-过程"><a href="#2-过程" class="headerlink" title="2.过程"></a>2.过程</h3><p>于是大致瞟了一眼业务系统使用的mybatis分页插件是<code>pagehelper</code>，然后就开始搜索MyBatis多个拦截器冲突问题。直觉告诉我，这个问题应该和拦截器的执行顺序有关。</p>
+<p>MyBatis的拦截器采用责任链设计模式，多个拦截器之间的责任链是通过动态代理组织的。我们一般都会在拦截器中的<code>intercept</code>方法中往往会有<code>invocation.proceed()</code>语句，其作用是将拦截器责任链向后传递，本质上便是动态代理的invoke。</p>
+<p>回到<code>pagehelper</code>源码查看，可以看到其<code>inercept</code>方法直接获取了<code>excutor</code>然后开始分页查询，当查询到结果时，便返回了。在此，我们发现了关键点，那就是<code>pagehelper</code>的<code>intercept</code>方法中没有<code>invocation.proceed()</code>，这意味着什么？这意味着<code>pagehelper</code>没有继续向后传递责任链，而是自行处理直接返回。由此，我们可以猜出该问题大概率与拦截器的执行顺序有关。通过断点调试，验证了该猜想，当遇到分页查询时，执行到<code>pagehelper</code>就结束了，没有进入我们的<code>catMybatisPlugin</code>。</p>
+<p><code>pagehelper</code>的拦截器是通过配置类<code>PageHelperAutoConfiguration</code>注册的，而非常规的通过xml文件，接着我们在<code>pagehelper</code>的配置类上注意到了一个注解<code>@AutoConfigureAfter(MybatisAutoConfiguration.class)</code>，这意味着pagehelper是最后注册的，这意味着该拦截器是在动态代理的最外层，当MyBatis开始执行SQL时，首先进入的就是pagehlper拦截器，处理返回；之后拦截器链上的拦截器不再处理。</p>
+<h3 id="3-解决"><a href="#3-解决" class="headerlink" title="3.解决"></a>3.解决</h3><p>到此，问题的答案已经越来越接近，只需让<code>catMybatisPlus</code>在<code>pagehelper</code>之后注册即可。解决办法便是，仿照<code>pagehelper</code>写一个<code>catMybatisPlus</code>的配置类，在该类上使用注解<code>@AutoConfigureAfter(PageHelperAutoConfiguration.class)</code>即可。编码实现，至此，问题得以解决。</p>
+<p>然而最后一步还有一个小插曲，一开始<code>@AutoConfigureAfter</code>并没有令<code>catMybatisPlus</code>前置注册。经过简单搜索发现<code>@AutoConfigureAfter</code>注解只可应用于autoconfigue类型的bean。而autoconfigue类型的bean一般用于spring-boot-starter导入文件，需要在<code>src/main/resources/META-INF</code>目录下的<code>spring.factories</code>声明。不过这里对我们来说，虽然不是一个spring-boot-starter，但用一下也无妨。创建<code>src/main/resources/META-INF/spring.factories</code>，声明该配置类即可。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>该问题的解决过程不是极其艰难，不过遇到了一些比较经典的关键点，比如责任链设计模式，比如动态代理，比如spring-boot-starter的规范。在过程中，为了实现配置的先后执行，甚至又扒了一边spring bean的加载过程，企图通过改变bean的加载顺序达到目的。整个过程比较有意思，故撰文记录。</p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#CAT" >
+    <span class="tag-code">CAT</span>
+  </a>
+
+  <a href="/tags#监控" >
+    <span class="tag-code">监控</span>
+  </a>
+
+  <a href="/tags#Mybatis拦截器" >
+    <span class="tag-code">Mybatis拦截器</span>
+  </a>
+
+  <a href="/tags#Mybatis" >
+    <span class="tag-code">Mybatis</span>
+  </a>
+
+  <a href="/tags#分页" >
+    <span class="tag-code">分页</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2018/07/08/cat源码阅读-设计细节解读/">
+        <span class="nav-arrow">← </span>
+        
+          cat源码阅读(二)-设计细节解读
+        
+      </a>
+    
+    
+      <a class="nav-right" href="/2018/09/28/容器监控利器-prometheus在生产落地过程中的思考/">
+        
+          容器监控利器-prometheus在生产落地过程中的思考
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#事件经过"><span class="toc-nav-text">事件经过</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-起因"><span class="toc-nav-text">1.起因</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#2-过程"><span class="toc-nav-text">2.过程</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#3-解决"><span class="toc-nav-text">3.解决</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#总结"><span class="toc-nav-text">总结</span></a></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://tongfeifan.github.io/2018/08/01/MyBatis拦截器因pagehelper而失效的问题解决/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+     // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+        
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+
+    // qrcode
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+
+    // gitment
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "MyBatis拦截器因pagehelper而失效的问题解决",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  })();
+</script>
+
+<script>
+  var disqus_shortname = '';
+  
+  var disqus_url = 'http://tongfeifan.github.io/2018/08/01/MyBatis拦截器因pagehelper而失效的问题解决/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2018 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>

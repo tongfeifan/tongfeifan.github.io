@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      容器监控利器-prometheus在生产落地过程中的思考 | 小童博客
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/plugins/gitment.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+  <script src="/js/qrious.js"></script>
+<script src="/js/gitment.js"></script>
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>小童博客</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>容器监控利器-prometheus在生产落地过程中的思考</h2>
+  <p class="post-date">2018-09-28</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>随着容器技术的不断推进，容器云也在同时不断发展，随之而来需要解决的问题便是容器及容器云的监控。目前容器监控的主流方案为prometheus。本文是在prometheus落地过程中的一些思考。</p>
+<h2 id="社区活跃"><a href="#社区活跃" class="headerlink" title="社区活跃"></a>社区活跃</h2><p>目前容器监控的主流方案为prometheus。作为CFCN社区的第二款产品（第一款为kubernets），prometheus在社区拥有极高的支持度，容器界主流成品几乎都做到了对prometheus的原生支持。并且由于prometheus采用了pull模式，对于其他产品来说，接入成本极低，只需为prometheus提供一个pull metrics的接口即可；由此我认为开源界接入prometheus的比例会不断升高。</p>
+<h2 id="功能丰富"><a href="#功能丰富" class="headerlink" title="功能丰富"></a>功能丰富</h2><h3 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h3><p>prometheus server端实际上是一个时间序列数据库，并且提供了查询引擎promQL，promQL本身提供的查询能力较为丰富。</p>
+<p>PromQL定义了四种数据类型，分别是instance vector(可理解为时间序列上的某一个点)，range vector(可理解为时间序列上的一段)，scalar(浮点数)，string(字符串，目前尚未使用)。PromQL便是通过操作符以及聚合函数操作这四种数据类型构成了查询表达式。</p>
+<p>PromQL所提供的操作符，一般用于操作instance vector。除了常规的加减乘除之外，promQL还提供了Aggregation operators，如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">sum (calculate sum over dimensions)</span><br><span class="line">min (select minimum over dimensions)</span><br><span class="line">max (select maximum over dimensions)</span><br><span class="line">avg (calculate the average over dimensions)</span><br><span class="line">stddev (calculate population standard deviation over dimensions)</span><br><span class="line">stdvar (calculate population standard variance over dimensions)</span><br><span class="line">count (count number of elements in the vector)</span><br><span class="line">count_values (count number of elements with the same value)</span><br><span class="line">bottomk (smallest k elements by sample value)</span><br><span class="line">topk (largest k elements by sample value)</span><br><span class="line">quantile (calculate φ-quantile (0 ≤ φ ≤ 1) over dimensions)</span><br></pre></td></tr></table></figure></p>
+<p>另外PromQL到目前为止(2.4版本)还提供了30余种function，可对数据进行花样查询和聚合。</p>
+<h3 id="报警"><a href="#报警" class="headerlink" title="报警"></a>报警</h3><p>prometheus体系中包含了报警管理- Alertmanager，Alertmanager被作为独立组件发布，独立部署。在部署Alertmanager后，只需在prometheus配置文件中配置Alertmanager的ip、port即可完成对接。Alertmanager的报警配置，依赖于promQL，同时配置报警模板以及notify通道即可使用。Alertermanager实现了报警的分组、抑制与安静功能，可以在配置之后，配合以上功能灵活地零时操作报警。目前已经集成的notify通道有：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">DingTalk</span><br><span class="line">IRC Bot</span><br><span class="line">JIRAlert</span><br><span class="line">Phabricator / Maniphest</span><br><span class="line">prom2teams: forwards notifications to Microsoft Teams</span><br><span class="line">SMS: supports multiple providers</span><br><span class="line">Telegram bot</span><br></pre></td></tr></table></figure></p>
+<h3 id="采集"><a href="#采集" class="headerlink" title="采集"></a>采集</h3><p>prometheus在采集方面，充分发挥了其社区活跃的优势，在容器层面，google的容器信息采集器<code>cadvisor</code>对prometheus提供了非常好的支持，同时kubernets项目也原生提供了prometheus的采集接口。在机器层面的信息采集，prometheus提供了机器层面的采集器<code>node_exporter</code>。对于主流语言java, python等prometheus也提供了相应的sdk client可以方便地采集应用层与业务层的监控数据。</p>
+<h2 id="第三方集成"><a href="#第三方集成" class="headerlink" title="第三方集成"></a>第三方集成</h2><p>Prometheus系统自身极度专注于监控，非常纯粹。然而在落地过程中实际存在着各种场景与需求，此时便需要结合一些第三方集成或定制化开发来达到我们的目的。</p>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>对于prometheus的配置，是基于yml配置文件进行的，所以每当需要操作prometheus的时候需要操作大量yml文件，关于此可考虑自行开发一个配置文件管理系统即可，也有对于的开源方案可参考：<a href="https://github.com/line/promgen" target="_blank" rel="noopener">promgen</a></p>
+<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>每当有新的监控target上线时，若是使用静态抓取配置，则需要每次修改配置项，如此操作比较麻烦，比较幸运的是prometheus集成了对主流服务发现中心/注册中心的集成，配置上对应的服务发现中心即可。</p>
+<p>然而如果使用的服务发现中心未被prometheus集成，也无需担心，prometheus支持基于文件的服务发现，即将target配置在json文件中。prometheus会定期读取json文件，更新target列表。那么基于此，我们只需针对所使用的服务发现中心，定期拉取服务列表，更新至json文件就可实现自定义的服务发现。</p>
+<h3 id="高可用-长期存储"><a href="#高可用-长期存储" class="headerlink" title="高可用/长期存储"></a>高可用/长期存储</h3><p>Prometheus作为一款监控产品，其server的初始定位只是用于短期存储，默认存储时间为15天，可在启动时通过<code>--storage.tsdb.retention</code>进行设定。目前prometheus自身并没有过多地考虑如何进行长期存储，但是prometheus提供了remote read 和remote write的，通过该功能可实现长期存储。</p>
+<p>关于prometheus的长期存储方案，我认为<a href="https://github.com/improbable-eng/thanos" target="_blank" rel="noopener">Thanos</a>项目是一个较为优秀的解决方案。</p>
+<p>在长期存储备份方面，他采用了<a href="https://docs.microsoft.com/en-us/azure/architecture/patterns/sidecar#solution" target="_blank" rel="noopener">slidecar</a>模式进行设计，通过与prometheus部署在一起的sidecar，将prometheus的存储文件备份到object storage（目前只支持gae, s3，可自行扩展）。另外Thanos可部署一个store组件， 可用来高效查询object storage。sidecar和store组件都会提供相同的store API，另外Thanos可部署一个query组件，通过store API查询sidecar或者store组件。另外query组件对外提供了与prometheus完全相同的查询dashboad与api，通过这一套方式Thanos实现了prometheus的长期存储，以及对长期存储数据和近期数据的相同查询。</p>
+<p>另外结合Thanos，可达到prometheus的高可用部署，只需部署两台完全相同的prometheus server，便可基本达到高可用。两者唯一区别即在external_labels配置replica，那么在部署thanos query的时候添加 flag <code>--query.replica-label replica</code>即可实现在查询时候的dereplica。</p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#监控" >
+    <span class="tag-code">监控</span>
+  </a>
+
+  <a href="/tags#容器" >
+    <span class="tag-code">容器</span>
+  </a>
+
+  <a href="/tags#prometheus" >
+    <span class="tag-code">prometheus</span>
+  </a>
+
+  <a href="/tags#落地" >
+    <span class="tag-code">落地</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2018/08/01/MyBatis拦截器因pagehelper而失效的问题解决/">
+        <span class="nav-arrow">← </span>
+        
+          MyBatis拦截器因pagehelper而失效的问题解决
+        
+      </a>
+    
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#背景"><span class="toc-nav-text">背景</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#社区活跃"><span class="toc-nav-text">社区活跃</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#功能丰富"><span class="toc-nav-text">功能丰富</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#查询"><span class="toc-nav-text">查询</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#报警"><span class="toc-nav-text">报警</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#采集"><span class="toc-nav-text">采集</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#第三方集成"><span class="toc-nav-text">第三方集成</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#配置"><span class="toc-nav-text">配置</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#服务发现"><span class="toc-nav-text">服务发现</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#高可用-长期存储"><span class="toc-nav-text">高可用/长期存储</span></a></li></ol></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://tongfeifan.github.io/2018/09/28/容器监控利器-prometheus在生产落地过程中的思考/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+     // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+        
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+
+    // qrcode
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+
+    // gitment
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "容器监控利器-prometheus在生产落地过程中的思考",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  })();
+</script>
+
+<script>
+  var disqus_shortname = '';
+  
+  var disqus_url = 'http://tongfeifan.github.io/2018/09/28/容器监控利器-prometheus在生产落地过程中的思考/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2018 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      cat源码阅读(二)-设计细节解读 | 小童博客
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/plugins/gitment.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+  <script src="/js/qrious.js"></script>
+<script src="/js/gitment.js"></script>
+  
+  
+    <!-- MathJax support START -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- MathJax support END -->
+  
+
+
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>小童博客</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>cat源码阅读(二)-设计细节解读</h2>
+  <p class="post-date">2018-07-08</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>CAT作为一款开源监控平台已经被许多大小公司所采用，如携程、陆金所、拍拍贷等大中型公司，以及其他各种创业公司，CAT在各大小公司一直稳定运行。这源于其优秀的细节设计。故本文将会分析CAT的一些设计细节，这些设计实现了较高的可用性，且较为复杂，值得一说。CAT主要的组成部分有： 客户端、服务端、存储几部分，下面分别对这几部分的设计做一些分析。</p>
+<p>客户端的主要设计点有调用链和路由，服务端的主要设计点有数据分析和报表（上文已讨论），存储的主要设计点在于文件存储模块。</p>
+<p>本文主要分析以下几点设计：</p>
+<ol>
+<li><a href="#客户端路由">客户端路由</a></li>
+<li><a href="#分布式调用链设计">分布式调用链设计</a></li>
+<li><a href="#文件存储设计">文件存储设计</a></li>
+</ol>
+<h2 id="客户端路由"><a href="#客户端路由" class="headerlink" title="客户端路由"></a>客户端路由</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>CAT的设计中，客户端路由是由客户端和服务器端共同实现的。通过服务端的参与，CAT实现了可在portal中动态配置服务地址；通过服务端分配<code>domain</code>与路由（此处<code>domain</code>可理解为应用名称），实现了相同<code>domain</code>的客户端消息都上报到同一台server端实例中，避免了server端互相通信等复杂设计。</p>
+<h3 id="设计图"><a href="#设计图" class="headerlink" title="设计图"></a>设计图</h3><p><img src="/images/routerDesign.png" alt="routerDesign"></p>
+<h3 id="详述"><a href="#详述" class="headerlink" title="详述"></a>详述</h3><p>在路由过程，我将其分为四个环节，分别是启动-&gt;获取路由-&gt;domain路由计算-&gt;构造/更新Channel。</p>
+<p>其中启动环节只在客户端启动的时候会触发。之后三个环节除客户端启动外，也会持续地轮询执行。</p>
+<ul>
+<li>启动(上图1，2)：在客户端启动时，<code>ClientConfigManager</code>会从配置文件中读取serverAddress，将serverAddress交给<code>ChannelManager</code>。</li>
+<li>获取路由（上图3）：<code>ChannelManager</code>在获取服务器地址后，会像该服务器的router接口发送请求，请求体中携带客户端名<code>domain</code></li>
+<li>domain路由计算（上图4）：服务端在接受路由计算请求后，便会从XML或者DB中读取ip-port列表，然后会依据每个domain的hashcode分配两个ip-port给该domain（上图中代码所示）</li>
+<li>构造/更新Channel（上图5）:服务端将分配的两个ip-port返回给客户端，由此客户端就得到了两个ip-port，客户端会将第一个ip-port作为主上报服务器，将第二个ip-port作为备份，用作failover，由此构造一个channal。</li>
+</ul>
+<p>经过以上四个步骤，客户端就完成了路由计算过程，<code>TcpSocketSender</code>只需获取channel，持续上报消息即可。</p>
+<h2 id="分布式调用链设计"><a href="#分布式调用链设计" class="headerlink" title="分布式调用链设计"></a>分布式调用链设计</h2><p>CAT可以通过定制化客户端而实现对分布式调用链的跟踪。CAT的分布式调用链在服务端主要是在展示的时候得到体现，所以可以通过阅读CAT的logview部分，探索CAT的分布式调用链设计机制。另外CAT服务端会对消息的type属性的某些默认值进行特殊处理，而分布式调用链的处理，正式通过对type为<code>RemoteCall</code>的Event消息进行处理，来组合分布式调用链。</p>
+<h3 id="logview展示消息树"><a href="#logview展示消息树" class="headerlink" title="logview展示消息树"></a>logview展示消息树</h3><p><img src="/images/CatMessageTreeShow.png" alt="CatMessageTreeShow"></p>
+<p>通过阅读展示代码，并梳理过程得到上图，我们发现CAT的分布式调用链关键是一个type为<code>RemoteCall</code>的Event，并且可以模拟构造远程调用所形成的messageTree，如下图。</p>
+<p><img src="/images/messageTreeRemoteCall.png" alt="messageTreeRemoteCall"></p>
+<h3 id="如何使用分布式调用链监控"><a href="#如何使用分布式调用链监控" class="headerlink" title="如何使用分布式调用链监控"></a>如何使用分布式调用链监控</h3><p>在CAT的官方文档中，几乎没有提及如何使用CAT的分布式调用链监控。然后CAT是提供了这一功能的，并且有较好的支持。我们通过阅读源码，理解了在服务端CAT是如何展示分布式调用链的，那么在客户端自然也就可以配合实现，从而开始使用CAT的分布式调用链追踪。</p>
+<h3 id="调用方客户端"><a href="#调用方客户端" class="headerlink" title="调用方客户端"></a>调用方客户端</h3><p>在拍拍贷内部，对okhttp进行了Aspectj编程，达成了使用okhttp包进行远程调用时的监控。核心代码段如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">PropertyContext context = <span class="keyword">new</span> PropertyContext();</span><br><span class="line">Cat.logRemoteCallClient(context);</span><br><span class="line"></span><br><span class="line">request = request.newBuilder()</span><br><span class="line">        .addHeader(CatConstants.HTTP_HEADER_ROOT_MESSAGE_ID, context.getProperty(Cat.Context.ROOT))</span><br><span class="line">        .addHeader(CatConstants.HTTP_HEADER_PARENT_MESSAGE_ID, context.getProperty(Cat.Context.PARENT))</span><br><span class="line">        .addHeader(CatConstants.HTTP_HEADER_CHILD_MESSAGE_ID, context.getProperty(Cat.Context.CHILD))</span><br><span class="line">        .addHeader(<span class="string">"X-PPD-CAT-APP"</span>, Cat.getManager().getDomain())</span><br><span class="line">        .build();</span><br><span class="line"></span><br><span class="line">ret = proceed(request);</span><br></pre></td></tr></table></figure></p>
+<p>通过代码可以看到，在请求中，将生成的childMessageId(可通过createMessageId方法生成)，放入header中，传递给了被调用方</p>
+<h3 id="被调用方客户端"><a href="#被调用方客户端" class="headerlink" title="被调用方客户端"></a>被调用方客户端</h3><p>而对http被调用方，则在filter获取header，并设置当前messageTree的messageId。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PropertyContext propertyContext = <span class="keyword">new</span> PropertyContext();</span><br><span class="line">propertyContext.addProperty(Cat.Context.ROOT, request.getHeader(CatConstants.HTTP_HEADER_ROOT_MESSAGE_ID));</span><br><span class="line">propertyContext.addProperty(Cat.Context.PARENT, request.getHeader(CatConstants.HTTP_HEADER_PARENT_MESSAGE_ID));</span><br><span class="line">propertyContext.addProperty(Cat.Context.CHILD, request.getHeader(CatConstants.HTTP_HEADER_CHILD_MESSAGE_ID));</span><br><span class="line">Cat.logRemoteCallServer(propertyContext);</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">logRemoteCallServer</span><span class="params">(Context ctx)</span> </span>&#123;</span><br><span class="line">	MessageTree tree = Cat.getManager().getThreadLocalMessageTree();</span><br><span class="line">	String messageId = ctx.getProperty(Context.CHILD);</span><br><span class="line">	String rootId = ctx.getProperty(Context.ROOT);</span><br><span class="line">	String parentId = ctx.getProperty(Context.PARENT);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (messageId != <span class="keyword">null</span>) &#123;</span><br><span class="line">		tree.setMessageId(messageId);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (parentId != <span class="keyword">null</span>) &#123;</span><br><span class="line">		tree.setParentMessageId(parentId);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (rootId != <span class="keyword">null</span>) &#123;</span><br><span class="line">		tree.setRootMessageId(rootId);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如此一来，CAT的远程调用的两个MessageTree就串起来了，这也达成了分布式调用追踪的目的。</p>
+<h2 id="文件存储设计"><a href="#文件存储设计" class="headerlink" title="文件存储设计"></a>文件存储设计</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><p>CAT为了高可用、高效地进行消息存储，设计了一套文件存储结构。此文件将同一小时内上报的消息归集在一个目录进行存储,存储文件各目录内分为索引文件、数据文件两部分。系统以IP、消息上报时间小时窗口、消息树序列号（1小时内序列号）便可快速定位某一个消息。</p>
+<h3 id="设计图-1"><a href="#设计图-1" class="headerlink" title="设计图"></a>设计图</h3><p><img src="/images/CatfileDesign.png" alt="CatfileDesign"></p>
+<h3 id="详述-1"><a href="#详述-1" class="headerlink" title="详述"></a>详述</h3><p>消息存储文件分为索引文件、数据文件。索引文件路径结构为<code>/{yyyymmdd}/{hh24}/{domain}-{serverIP}.idex2</code>，数据文件路径结构与索引文件相比仅后缀不同，其结构为<code>/{yyyymmdd}/{hh24}/{domain}-{serverIP}.dat2</code>。</p>
+<p>索引文件分为heander段和segment段，其中segment段便是有多个索引块顺序存储构成；而header段内每一条数据由64位存储，前32位为IP，后32位为segmentIdex。header段通过此方式维护了消息IP、segmentIndex与索引块的关系。segmentIndex可由消息树序列号(messageSeq)计算得知。因此一个消息可通过其IP、消息树序列号快速定位索引。</p>
+<p>索引块中每一条数据，由64位存储，前40位为blockAddress, 后24位为block内offset的，通过blockAddress和blockOffset可快速定位一条messageTree在数据文件中的位置。</p>
+<p>数据文件由多个block构成，每个block内的messageTree都上报自相同domain的客户端。</p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#CAT" >
+    <span class="tag-code">CAT</span>
+  </a>
+
+  <a href="/tags#监控" >
+    <span class="tag-code">监控</span>
+  </a>
+
+  <a href="/tags#源码阅读，架构设计" >
+    <span class="tag-code">源码阅读，架构设计</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2018/07/06/cat源码阅读-架构设计解读/">
+        <span class="nav-arrow">← </span>
+        
+          cat源码阅读(一)-架构设计解读
+        
+      </a>
+    
+    
+      <a class="nav-right" href="/2018/08/01/MyBatis拦截器因pagehelper而失效的问题解决/">
+        
+          MyBatis拦截器因pagehelper而失效的问题解决
+        
+        <span class="nav-arrow"> →</span>
+      </a>
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- Gitment START -->
+      <div id="comments"></div>
+      <!-- Gitment END -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#背景"><span class="toc-nav-text">背景</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#客户端路由"><span class="toc-nav-text">客户端路由</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#概述"><span class="toc-nav-text">概述</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#设计图"><span class="toc-nav-text">设计图</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#详述"><span class="toc-nav-text">详述</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#分布式调用链设计"><span class="toc-nav-text">分布式调用链设计</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#logview展示消息树"><span class="toc-nav-text">logview展示消息树</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#如何使用分布式调用链监控"><span class="toc-nav-text">如何使用分布式调用链监控</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#调用方客户端"><span class="toc-nav-text">调用方客户端</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#被调用方客户端"><span class="toc-nav-text">被调用方客户端</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#文件存储设计"><span class="toc-nav-text">文件存储设计</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#概述-1"><span class="toc-nav-text">概述</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#设计图-1"><span class="toc-nav-text">设计图</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#详述-1"><span class="toc-nav-text">详述</span></a></li></ol></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://tongfeifan.github.io/2018/07/08/cat源码阅读-设计细节解读/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+     // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+        
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+
+    // qrcode
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+
+    // gitment
+    var gitmentConfig = "yanm1ng";
+    if (gitmentConfig !== 'undefined') {
+      var gitment = new Gitment({
+        id: "cat源码阅读(二)-设计细节解读",
+        owner: "yanm1ng",
+        repo: "yanm1ng.github.io",
+        oauth: {
+          client_id: "0f87e490e00ee3fd87ef",
+          client_secret: "4a9d2b148e7971c2201ad12131ce8bf8159ccd2e"
+        },
+        theme: {
+          render(state, instance) {
+            const container = document.createElement('div')
+            container.lang = "en-US"
+            container.className = 'gitment-container gitment-root-container'
+            container.appendChild(instance.renderHeader(state, instance))
+            container.appendChild(instance.renderEditor(state, instance))
+            container.appendChild(instance.renderComments(state, instance))
+            container.appendChild(instance.renderFooter(state, instance))
+            return container;
+          }
+        }
+      })
+      gitment.render(document.getElementById('comments'))
+    }
+  })();
+</script>
+
+<script>
+  var disqus_shortname = '';
+  
+  var disqus_url = 'http://tongfeifan.github.io/2018/07/08/cat源码阅读-设计细节解读/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//go.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2018 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+<script src="/js/script.js"></script>
+  </body>
+</html>
